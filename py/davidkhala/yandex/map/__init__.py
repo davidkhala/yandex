@@ -13,10 +13,13 @@ class API(Request):
         return super().request(url, method, params, data, json)
 
     def suggest(self, query):
+        """
+        :param query:
+        :return: No lng,lat in return
+        """
         r = self.request('https://suggest-maps.yandex.ru/v1/suggest', "GET", {
             'text': query
         })
-        # No lng,lat
         return [{
             'name': result['title']['text'],
             'subtitle': result['subtitle']['text'],
@@ -36,3 +39,19 @@ class API(Request):
             'type': _type
         })
         return r
+
+    def encode(self, address: str):
+        r = self.request('https://geocode-maps.yandex.ru/v1/', 'GET', {
+            'geocode': address,
+            'format': 'json'  # mandatory
+        })
+        _ = r['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']
+
+        longitude, latitude = _['Point']['pos'].split(' ')
+
+        return {
+            'name': _['name'],
+            'longitude': longitude,
+            'latitude': latitude,
+            'uri': _['uri'],
+        }
